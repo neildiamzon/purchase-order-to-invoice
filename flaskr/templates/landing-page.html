@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WF Automation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            background: #f0f4f8;
+            padding: 50px;
+        }
+        .container {
+            background: white;
+            display: inline-block;
+            padding: 40px 60px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #555;
+        }
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #27A6E5;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #1e91cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Starting WF-Automation</h1>
+        <p>Start by authorizing this application to connect to your Xero Account</p>
+        <a class="button" href="{{ url_for('start_auth') }}">Get Started</a>
+    </div>
+</body>
+</html>

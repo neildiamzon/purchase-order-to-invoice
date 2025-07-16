@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Authorization Complete</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding-top: 50px; }
+    .card {
+      display: inline-block;
+      padding: 30px;
+      border-radius: 10px;
+      background-color: #f1f1f1;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>❌ Authorization Unsuccessful! ❌</h2>
+    <p>This application requires permission to the Xero Account. Please authorize again.</p>
+    <a class="button" href="{{ url_for('start_auth') }}">Retry</a>
+  </div>
+</body>
+</html>

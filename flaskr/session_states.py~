@@ -1,0 +1,14 @@
+import os
+from dotenv import load_dotenv
+
+CONST_AUTH_URL = "https://login.xero.com/identity/connect/authorize"
+CONST_REDIRECT_URI = "http://localhost:5000/callback"
+CONST_CLIENT_ID = "195EC440901247E58386F481ADBC8AB9"
+CONST_SCOPES = "openid profile email accounting.transactions accounting.contacts offline_access"
+
+code_verifier = None
+code_challenge = None
+auth_code = None
+refresh_token = None
+access_token = None
+xero_tenant_id = None
