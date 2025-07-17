@@ -3,12 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Automation Started</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Dark background */
+            color: #f0f0f0; /* Light text for contrast */
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 10px;
+            background-color: #1e1e1e; /* Slightly lighter dark */
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        code {
+            background-color: #2c2c2c;
+            padding: 2px 5px;
+            border-radius: 4px;
+            color: #ffcc00;
+        }
+        img {
+            width: 150px; /* adjust size as needed */
+            margin-bottom: 20px;
+        }
+        strong {
+            color: #66ccff;
+        }
+    </style>
 </head>
 <body>
-    <h2>Automation Started</h2>
-
-    <p>Please add a file in <code>C:\WatchPDFs</code> to get started.</p>
-    <p>The <strong>processed</strong> folder contains successfully created invoices. Please double-check DRAFT invoices.</p>
-    <p>The <strong>error</strong> folder contains files that were unsuccessful.</p>
+    <div class="container">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo"/>
+        <h2>Automation Started</h2>
+        <p>Please add a file in <code>C:\WatchPDFs</code> to get started.</p>
+        <p>The <strong>processed</strong> folder contains successfully created invoices. Please double-check DRAFT invoices.</p>
+        <p>The <strong>error</strong> folder contains files that were unsuccessful.</p>
+    </div>
 </body>
 </html>

@@ -38,7 +38,7 @@ def refresh_access_token(refresh_token, client_id):
         headers={"Content-Type": "application/x-www-form-urlencoded"}
     )
     response.raise_for_status()
-    return response.json()["access_token"]
+    return response.json()["refresh_token"], response.json()["access_token"]
 
 def start_authorization(auth_url, client_id, redirect_uri, scopes, code_challenge):
     params = {

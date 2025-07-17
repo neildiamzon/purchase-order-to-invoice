@@ -1,17 +1,16 @@
 import os
 
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, url_for
+
 from logging.config import dictConfig
-import threading, webbrowser, time
+import time
 import json
 
-from requests.exceptions import HTTPError
-
 import session_states
-import Constants
+import constants
 from token_manager import load_tokens, save_tokens, clear_tokens
 from oauth_utils import generate_pkce_pair, start_authorization, exchange_code_for_token, get_xero_tenant_id, refresh_access_token
-from DataManager import get_customers, get_items, create_invoice
+from data_manager import get_customers, get_items, create_invoice
 from pdf_processor import build_invoice
 from threading import Thread, Event, Lock
 
@@ -46,9 +45,6 @@ dictConfig(
 
 if __name__ == "__main__":
     app.run("localhost", port=5000, debug=True)
-@app.route("/")
-def landing():
-    return render_template("landing-page.html")
 
 @app.route("/auth")
 def start_auth():
@@ -62,29 +58,52 @@ def start_auth():
             session_states.access_token = tokens["access_token"].strip()
 
             session_states.xero_tenant_id = get_xero_tenant_id(session_states.access_token)
-            app.logger.info(f"Tokens valid. {session_states.access_token}")
+            app.logger.info(f"Tokens valid.")
         except Exception as e:
             app.logger.error("Error loading tokens: %s", e)
-            clear_tokens()
-            return render_template("callback-error.html")
 
-        return render_template("callback.html")
+            try:
+                # attempt refresh token refresh
+                app.logger.info(f"Refreshing access token. . .")
+                refresh_tokens()
+                return redirect(url_for("main_function"))
+            except Exception as e1:
+
+                # Most likely refresh token is invalid.
+                app.logger.info(f"Error attempt to refresh token {e1}.")
+                clear_tokens()
+                return render_template("callback-error.html")
+
+        return redirect(url_for("main_function"))
 
     if not tokens:
         app.logger.info("Tokens missing from file. Starting auth flow...")
-        session_states.code_verifier, session_states.code_challenge = generate_pkce_pair()
-
-        # ==== BUILD AUTH URL ====
-        url = start_authorization(
-            session_states.CONST_AUTH_URL,
-            session_states.CONST_CLIENT_ID,
-            session_states.CONST_REDIRECT_URI,
-            session_states.CONST_SCOPES,
-            session_states.code_challenge
-        )
-        app.logger.info("Opening Web Browser to: %s", url)
+        url = retrieve_tokens()
         return redirect(url)
 
+def retrieve_tokens():
+    session_states.code_verifier, session_states.code_challenge = generate_pkce_pair()
+
+    # ==== BUILD AUTH URL ====
+    url = start_authorization(
+        session_states.CONST_AUTH_URL,
+        session_states.CONST_CLIENT_ID,
+        session_states.CONST_REDIRECT_URI,
+        session_states.CONST_SCOPES,
+        session_states.code_challenge
+    )
+    app.logger.info("Opening Web Browser to: %s", url)
+
+    return url
+
+def refresh_tokens():
+    session_states.refresh_token, session_states.access_token = (
+        refresh_access_token(session_states.refresh_token, session_states.CONST_CLIENT_ID))
+
+    app.logger.info("Access token refreshed!")
+
+    save_tokens({"tenant_id": session_states.xero_tenant_id, "refresh_token": session_states.refresh_token,
+                 "access_token": session_states.access_token})
 @app.route("/callback")
 def callback():
     if request.args.get("error"):
@@ -106,15 +125,14 @@ def callback():
         # app.logger.info("Tenant ID: %s", session_states.xero_tenant_id)
 
         save_tokens({"tenant_id": session_states.xero_tenant_id, "refresh_token": session_states.refresh_token, "access_token": session_states.access_token})
-
-        return render_template("callback.html")
+        return redirect(url_for("main_function"))
 
 def initialize_data():
     global scan_thread, scan_thread_started
     app.logger.info("Initializing data...")
 
-    Constants.inv_customers = get_customers(session_states.access_token, session_states.xero_tenant_id)
-    Constants.inv_items = get_items(session_states.access_token, session_states.xero_tenant_id)
+    constants.inv_customers = get_customers(session_states.access_token, session_states.xero_tenant_id)
+    constants.inv_items = get_items(session_states.access_token, session_states.xero_tenant_id)
 
     with scan_thread_lock:
         if not scan_thread_started:
@@ -159,20 +177,26 @@ def scan_for_pdfs():
                         app.logger.info(f"Processed file: {processed_path}")
 
                     except Exception as e:
-                        app.logger.error(f"Error with file: {file_path}. {e}")
-                        os.replace(file_path, error_path)
-
                         error_str = str(e).lower()
                         try:
                             error_json = json.loads(str(e))
                             status = error_json.get("Status")
-                        except Exception:
+                        except Exception as ex:
+                            app.logger.error(f"Unexpected error occurred: {ex}.")
                             status = None
 
                         # Stop scanner on fatal Xero auth error (401 Unauthorized)
                         if status == 401 or "401" in error_str or "unauthorized" in error_str or "tokenexpired" in error_str:
-                            app.logger.error("401 Unauthorized or token expired. Stopping scan thread.")
-                            stop_scan_event.set()
+                            app.logger.error(
+                                "401 Unauthorized or token expired. Attempting to refresh access token. . .")
+                            try:
+                                refresh_tokens()
+                            except Exception as e1:
+                                app.logger.error(
+                                    f"Error on attempting refresh token {e1}")
+                                app.logger.error(f"Error with file: {file_path}. {e}")
+                                os.replace(file_path, error_path)
+                                stop_scan_event.set()
 
                 end = time.time()
                 app.logger.info(f"Time elapsed processing {len(files)} files is {end - start:.4f} seconds")
@@ -181,11 +205,11 @@ def scan_for_pdfs():
             app.logger.error(f"[Watcher] Unexpected error: {e}")
 
         time.sleep(10)
-@app.route("/main")
+@app.route("/")
 def main_function():
     try:
         initialize_data()
         return render_template("main-page.html")
     except Exception as e:
-        app.logger.error(f"Error initializing data. Aborting application. . .{e}")
-        return render_template("callback-error.html")
+        app.logger.error(f"Error initializing data. Authentication required. . .{e}")
+        return start_auth()

@@ -2,7 +2,7 @@ from pprint import pprint
 
 import requests
 import json
-from Constants import customers, BLOCKED_ITEMS
+from constants import customers, BLOCKED_ITEMS
 from urllib.parse import quote
 
 
@@ -34,7 +34,7 @@ def get_items(access_token, xero_tenant_id):
         if not is_blocked(item["Description"])
     ]
 
-    pprint(items)
+    # pprint(items)
     return items
 
 def get_customers(access_token, xero_tenant_id):
@@ -79,3 +79,7 @@ def create_invoice(invoice_data, access_token, xero_tenant_id):
     else:
         print(f"Error: {response.status_code}")
         print(response.text)
+        raise Exception(json.dumps({
+            "Status": response.status_code,
+            "Response": response.text
+        }))

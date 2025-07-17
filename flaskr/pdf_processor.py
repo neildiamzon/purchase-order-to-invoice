@@ -4,7 +4,7 @@ import fuzzywuzzy.fuzz
 import pdfplumber
 import importlib
 import Levenshtein
-import Constants
+import constants
 import fuzzywuzzy
 from pprint import pprint
 
@@ -51,7 +51,7 @@ def customer_extractor(file_name):
         for text in data:
             temp = text['text'].lower().replace(' ', '').replace('@', '').replace('.','').replace("worldfoodsnz", '')
 
-            for cust in Constants.inv_customers:
+            for cust in constants.inv_customers:
                 ratio = Levenshtein.ratio(temp, cust["Name"].lower().replace(' ', ''))
                 if ratio > best_ratio:
                     print(f"best cust match so far: {cust['Name']} from {temp}")
@@ -140,7 +140,7 @@ def build_line_items(po_items, company_name):
         item = po_item["description"].lower()
         target_item = ''
         best_score = 0
-        for db_item in Constants.inv_items:
+        for db_item in constants.inv_items:
             ratio = fuzzywuzzy.fuzz.token_set_ratio(item, db_item["Description"].lower())
 
             if ratio > 30: ## most likely similar
@@ -156,7 +156,7 @@ def build_line_items(po_items, company_name):
                     final_score = ratio - weight_penalty
                     #pprint(f"po_item: {item} looking at Item: {db_item["Description"]}: final score = {final_score}")
 
-                    for brand in Constants.BRANDS:
+                    for brand in constants.BRANDS:
                         if (normalize_brand(brand) in normalize_brand(item)
                                 and normalize_brand(brand) in normalize_brand(db_item["Description"].lower())): # optimize
                             final_score += brand_bonus_points
