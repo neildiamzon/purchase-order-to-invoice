@@ -1,5 +1,5 @@
 
-# 🧾 Purchase Order to Invoice Converter
+# 🧾 Purchase Order to Invoice Automation
 
 A lightweight Flask web application that converts purchase orders (PDFs) into structured invoice documents. Built to streamline business workflows, especially for manual or semi-automated B2B transactions.
 
