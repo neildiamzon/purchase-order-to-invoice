@@ -1,4 +1,4 @@
-customers = ["service%foods", "bidfood", "kaan", "davis"]
+customers = ["service%foods", "bidfood", "kaan", "davis", "gilmours"]
 BRANDS = [
     "alderson", "badia", "bianco", "dinapoli", "big red", "bonta",
     "frank", "french", "louisiana",

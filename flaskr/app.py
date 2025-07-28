@@ -1,4 +1,5 @@
 import os
+import traceback
 
 from flask import Flask, request, render_template, redirect, url_for
 
@@ -157,7 +158,7 @@ def scan_for_pdfs():
 
     while not stop_scan_event.is_set():
         try:
-            files = [f for f in os.listdir(WATCH_FOLDER) if f.lower().endswith('.pdf')]
+            files = [f for f in os.listdir(WATCH_FOLDER) if f.lower().endswith(('.pdf', '.xml'))]
             if files:
                 start = time.time()
                 for filename in files:
@@ -171,7 +172,7 @@ def scan_for_pdfs():
 
                         # Send invoice to Xero
                         # Uncomment and wrap this in error handling:
-                        create_invoice(invoice, session_states.access_token, session_states.xero_tenant_id)
+                        # create_invoice(invoice, session_states.access_token, session_states.xero_tenant_id)
 
                         os.replace(file_path, processed_path)
                         app.logger.info(f"Processed file: {processed_path}")
@@ -183,6 +184,7 @@ def scan_for_pdfs():
                             status = error_json.get("Status")
                         except Exception as ex:
                             app.logger.error(f"Unexpected error occurred: {ex}.")
+                            app.logger.error(traceback.format_exc())
                             status = None
 
                         # Stop scanner on fatal Xero auth error (401 Unauthorized)

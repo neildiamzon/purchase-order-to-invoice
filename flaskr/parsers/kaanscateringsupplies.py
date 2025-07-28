@@ -10,7 +10,8 @@ def adjust_quantity(po_item, xero_item):
     if match:
         return po_item["quantity"] # default - description contains units
 
-    match = re.search(r'(\d+(\.\d+)?)(kg|g|l|ml)', xero_item["Description"], re.IGNORECASE)
+
+    match = re.search(r'(\d+(\.\d+)?)(?:\s*)(kg|g|l|ml)\b', xero_item["Description"], re.IGNORECASE)
 
     if match:
         weight = float(match.group(1))
